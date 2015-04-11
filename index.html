@@ -1,0 +1,64 @@
+<html>
+<head>
+<title>Kamia Ollandia.</title>
+</head>
+<body>
+
+<input type="file"  id="excel" />
+
+
+<script type="text/javascript" src="node_modules/angular/angular.js"></script>
+<script type="text/javascript" src="node_modules/FileSaver.js"></script>
+<script type="text/javascript" src="node_modules/xlsx/jszip.js"></script>
+<script type="text/javascript" src="node_modules/xlsx/xlsx.js"></script>
+
+<script type="text/javascript">
+/* bookType can be 'xlsx' or 'xlsm' or 'xlsb' */
+var wopts = { bookType:'xlsx', bookSST:false, type:'binary' };
+
+
+function s2ab(s) {
+  var buf = new ArrayBuffer(s.length);
+  var view = new Uint8Array(buf);
+  for (var i=0; i!=s.length; ++i) view[i] = s.charCodeAt(i) & 0xFF;
+  return buf;
+}
+
+function handleFile(e) {
+  var files = e.target.files;
+  var i,f;
+  for (i = 0, f = files[i]; i != files.length; ++i) {
+    var reader = new FileReader();
+    var name = f.name;
+    reader.onload = function(e) {
+      var data = e.target.result;
+
+      var workbook = XLSX.read(data, {type: 'binary'});
+	 var wbout = XLSX.write(workbook,wopts);
+
+	 console.log(workbook);
+	 var sheet = workbook.Sheets.Sheet1;
+	 var uniques = {};
+	 for( var i in sheet ){
+		if( i[0] != 'A' ){
+			delete sheet[i];
+		}
+		else{
+			if( !uniques[sheet[i].v] )
+				uniques[sheet[i].v] = 1;
+			else
+				delete sheet[i];
+		}
+	 }
+	 
+	/* the saveAs call downloads a file on the local machine */
+	saveAs(new Blob([s2ab(wbout)],{type:""}), "test.xlsx")	 
+    };
+    reader.readAsBinaryString(f);
+  }
+}
+document.getElementById('excel').addEventListener('change', handleFile, false);
+</script>
+
+</body>
+</html>
